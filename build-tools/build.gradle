@@ -1,0 +1,159 @@
+plugins {
+    id 'base'
+    id 'org.asciidoctor.jvm.convert' version '4.0.2'
+    id 'org.asciidoctor.jvm.pdf' version '4.0.2'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def bookSourceDir = layout.projectDirectory.dir('book')
+def masterDocument = 'index.adoc'
+def svSourceDir = layout.projectDirectory.dir('book')
+def svMasterDocument = 'index_sv.adoc'
+def pdfThemeDir = layout.projectDirectory.dir('pdf-theme')
+def pdfFontsDir = layout.projectDirectory.dir('pdf-theme/fonts')
+def siteAssetsDir = layout.projectDirectory.dir('site')
+
+def commonAttributes = [
+    'source-highlighter': 'rouge',
+    'toclevels': '3',
+    'sectnumlevels': '3'
+]
+
+def htmlAttributes = commonAttributes + [
+    'toc': 'left',
+    'linkcss': '',
+    'stylesdir': '.',
+    'stylesheet': 'tlcl-book.css'
+]
+
+def pdfAttributes = commonAttributes + [
+    'toc': 'macro',
+    'icons': 'font'
+]
+
+tasks.named('asciidoctor', org.asciidoctor.gradle.jvm.AsciidoctorTask) {
+    group = 'documentation'
+    description = 'Builds the HTML book from book/index.adoc.'
+    dependsOn tasks.named('clean')
+    sourceDir = bookSourceDir.asFile
+    sources {
+        include masterDocument
+    }
+    baseDirFollowsSourceDir()
+    outputDir = layout.buildDirectory.dir('docs/html').get().asFile
+    attributes(htmlAttributes)
+    resources {
+        from(layout.projectDirectory.dir('images')) {
+            into 'images'
+        }
+        from(siteAssetsDir) {
+            include 'tlcl-book.css'
+            include 'fonts/**'
+            into '.'
+        }
+    }
+}
+
+tasks.named('asciidoctorPdf', org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask) {
+    group = 'documentation'
+    description = 'Builds the PDF book from book/index.adoc.'
+    dependsOn tasks.named('clean')
+    sourceDir = bookSourceDir.asFile
+    sources {
+        include masterDocument
+    }
+    baseDirFollowsSourceDir()
+    outputDir = layout.buildDirectory.dir('docs/pdf').get().asFile
+    attributes(pdfAttributes + [
+        'imagesdir': '..',
+        'pdf-theme': 'tlcl-theme.yml',
+        'pdf-themesdir': pdfThemeDir.asFile.absolutePath,
+        'pdf-fontsdir': pdfFontsDir.asFile.absolutePath
+    ])
+}
+
+tasks.register('asciidoctorSv', org.asciidoctor.gradle.jvm.AsciidoctorTask) {
+    group = 'documentation'
+    description = 'Builds the Swedish HTML book from book/index_sv.adoc.'
+    dependsOn tasks.named('clean')
+    sourceDir = svSourceDir.asFile
+    sources {
+        include svMasterDocument
+    }
+    baseDirFollowsSourceDir()
+    outputDir = layout.buildDirectory.dir('docs/html-sv').get().asFile
+    attributes(htmlAttributes + [
+        'lang': 'sv'
+    ])
+    resources {
+        from(layout.projectDirectory.dir('images')) {
+            into 'images'
+        }
+        from(siteAssetsDir) {
+            include 'tlcl-book.css'
+            include 'fonts/**'
+            into '.'
+        }
+    }
+}
+
+tasks.register('asciidoctorPdfSv', org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask) {
+    group = 'documentation'
+    description = 'Builds the Swedish PDF book from book/index_sv.adoc.'
+    dependsOn tasks.named('clean')
+    sourceDir = svSourceDir.asFile
+    sources {
+        include svMasterDocument
+    }
+    baseDirFollowsSourceDir()
+    outputDir = layout.buildDirectory.dir('docs/pdf-sv').get().asFile
+    attributes(pdfAttributes + [
+        'imagesdir': '..',
+        'pdf-theme': 'tlcl-theme.yml',
+        'pdf-themesdir': pdfThemeDir.asFile.absolutePath,
+        'pdf-fontsdir': pdfFontsDir.asFile.absolutePath
+    ])
+}
+
+tasks.register('htmlDocs') {
+    group = 'documentation'
+    description = 'Alias for asciidoctor.'
+    dependsOn tasks.named('asciidoctor')
+}
+
+tasks.register('pdfDocs') {
+    group = 'documentation'
+    description = 'Alias for asciidoctorPdf.'
+    dependsOn tasks.named('asciidoctorPdf')
+}
+
+tasks.register('htmlDocsSv') {
+    group = 'documentation'
+    description = 'Alias for asciidoctorSv.'
+    dependsOn 'asciidoctorSv'
+}
+
+tasks.register('pdfDocsSv') {
+    group = 'documentation'
+    description = 'Alias for asciidoctorPdfSv.'
+    dependsOn 'asciidoctorPdfSv'
+}
+
+tasks.register('docsSv') {
+    group = 'documentation'
+    description = 'Builds Swedish HTML and PDF documentation.'
+    dependsOn 'asciidoctorSv', 'asciidoctorPdfSv'
+}
+
+tasks.register('docs') {
+    group = 'documentation'
+    description = 'Builds HTML and PDF documentation (all languages).'
+    dependsOn tasks.named('asciidoctor'), tasks.named('asciidoctorPdf'), 'asciidoctorSv', 'asciidoctorPdfSv'
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('docs')
+}
