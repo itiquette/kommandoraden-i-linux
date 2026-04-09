@@ -1,0 +1,97 @@
+# Deploys the `pages` branch to GitHub Pages after gating checks.
+#
+# The private source repo's publish.yml force-refreshes the `pages` branch with
+# sanitized HTML. This workflow runs on any update to `pages`, re-verifies the
+# no-JavaScript and no-external-asset rules (belt-and-braces vs. the private
+# export), validates HTML structure, runs pa11y for WCAG 2.2 AA signal, and
+# only then deploys.
+#
+# Prereqs on this repo:
+#   Settings > Pages > Source = GitHub Actions
+
+name: Deploy Pages
+
+on:
+  push:
+    branches: [pages]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  checks:
+    name: Integrity + a11y
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main (pa11y.json + check scripts)
+        uses: actions/checkout@v4
+
+      - name: Checkout pages content
+        uses: actions/checkout@v4
+        with:
+          ref: pages
+          path: pages-site
+
+      - name: No JS, no external runtime assets
+        run: |
+          set -euo pipefail
+          cd pages-site
+          if grep -R -nI --include='*.html' -E '<script\b|href=["'"'"']javascript:' .; then
+            echo "javascript leaked into published HTML" >&2
+            exit 1
+          fi
+          if grep -R -nI --include='*.html' -E '<link[^>]+href=["'"'"']https?://|<script[^>]+src=["'"'"']https?://' .; then
+            echo "external runtime asset in published HTML" >&2
+            exit 1
+          fi
+          if grep -R -nI --include='*.css' -E '@import|url\(["'"'"']?https?://' .; then
+            echo "external asset in published CSS" >&2
+            exit 1
+          fi
+
+      - name: Install xmllint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libxml2-utils
+          # google-chrome-stable is preinstalled on ubuntu-latest;
+          # check-pages-a11y.sh detects it via PATH.
+
+      - name: Validate HTML structure
+        run: xmllint --html --noout pages-site/index.html
+
+      - name: pa11y
+        run: ./scripts/check-pages-a11y.sh "${{ github.workspace }}/pages-site"
+
+  deploy:
+    name: Deploy
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout pages
+        uses: actions/checkout@v4
+        with:
+          ref: pages
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
