@@ -15,32 +15,32 @@
 }
 
 @font-face {
-  font-family: "Jost";
-  src: url("fonts/jost-regular.ttf") format("truetype");
+  font-family: "Atkinson Hyperlegible";
+  src: url("fonts/atkinson-hyperlegible-regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Jost";
-  src: url("fonts/jost-bold.ttf") format("truetype");
+  font-family: "Atkinson Hyperlegible";
+  src: url("fonts/atkinson-hyperlegible-bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Jost";
-  src: url("fonts/jost-italic.ttf") format("truetype");
+  font-family: "Atkinson Hyperlegible";
+  src: url("fonts/atkinson-hyperlegible-italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Jost";
-  src: url("fonts/jost-bold-italic.ttf") format("truetype");
+  font-family: "Atkinson Hyperlegible";
+  src: url("fonts/atkinson-hyperlegible-bold-italic.ttf") format("truetype");
   font-weight: 700;
   font-style: italic;
   font-display: swap;
@@ -77,7 +77,7 @@
   --code-border: #dbe2ea;
   --sidebar-width: 19rem;
   --content-width: 48rem;
-  --ui: "Jost", "Liberation Sans", ui-sans-serif, system-ui, sans-serif;
+  --ui: "Atkinson Hyperlegible", "Liberation Sans", ui-sans-serif, system-ui, sans-serif;
   --serif: "Source Serif 4", "Liberation Serif", Georgia, serif;
   --mono: "Inconsolata", "Liberation Mono", monospace;
 }
