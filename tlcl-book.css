@@ -506,6 +506,23 @@ samp {
   color: #111827;
 }
 
+.sidebarblock {
+  margin: 1.75rem 0;
+}
+
+.sidebarblock > .content {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.9rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.sidebarblock > .content > .title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.85rem 0;
+}
+
 .admonitionblock > table {
   background: transparent;
 }
